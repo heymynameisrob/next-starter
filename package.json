@@ -48,6 +48,7 @@
     "framer-motion": "^11.11.9",
     "ky": "^1.7.2",
     "lucide-react": "^0.453.0",
+    "nanoid": "^5.0.7",
     "next": "15.0.1",
     "next-auth": "^4.24.10",
     "next-themes": "^0.3.0",

@@ -6,7 +6,9 @@ import {
   uuid,
   foreignKey,
   boolean,
+  customType,
 } from "drizzle-orm/pg-core";
+import { nanoid } from "nanoid";
 
 const pgTable = pgTableCreator((name) => `nextstarter_${name}`);
 
@@ -26,11 +28,13 @@ export const users = pgTable("user", {
 export const posts = pgTable(
   "posts",
   {
-    id: serial("id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
     title: text(),
     date: date().defaultNow(),
     content: text(),
-    user: uuid("user_id"),
+    user: text("user_id"),
     pubic: boolean().default(false),
   },
   (table) => {

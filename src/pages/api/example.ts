@@ -1,8 +1,10 @@
 // API Route Example
 // https://nextjs.org/docs/api-routes/introduction
 import { eq } from "drizzle-orm";
+import { getServerSession } from "next-auth";
+import { kv } from "@vercel/kv";
 
-import { auth } from "@/lib/auth";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { db, schema } from "@/lib/db";
 
 import type { User } from "@/lib/types";
@@ -25,7 +27,8 @@ export default async function handler(
    * This tells us if the user is 1) logged in and 2) which user it is
    * This stops any unauthenticated access as well as unauthorized (spoofing other users) access
    */
-  const session = await auth(req, res);
+  const session = await getServerSession(req, res, authOptions);
+
   if (!session)
     return res.status(401).json({ message: "Unathenticated. Please login." });
   const userId = session.user.id;
@@ -39,6 +42,19 @@ export default async function handler(
   if (req.method === "POST") {
     const json = await saveData(userId, req.body);
     return res.status(200).json(json);
+  }
+
+  /**
+   * 02. Redis Cache
+   * Sometimes you might want to cache values in Redis for quick retreval.
+   * Most caching is handled client-side, however there may be times you want it done on the server first.
+   */
+
+  const queryKey = `${process.env.PROJECT_NAME}:${userId}:${req.url}`;
+  const cache = req.body.cache === "no-store" ? null : await kv.get(queryKey);
+
+  if (cache) {
+    return cache;
   }
 
   const json = getData(userId);
